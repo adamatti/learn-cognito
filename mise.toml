@@ -1,3 +1,5 @@
 [tools]
 node = "24"
+opentofu = "latest"
 pnpm = "latest"
+tflint = "latest"

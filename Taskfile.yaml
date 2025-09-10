@@ -2,6 +2,12 @@
 ---
 version: "3"
 
+dotenv: [.env]
+
+vars:
+  LAMBDA_BUCKET: "adamatti-sa"
+  BUILD_TAG: $(cat .cache/build_tag)
+
 tasks:
   default:
     desc: Show help
@@ -14,6 +20,7 @@ tasks:
     desc: Clean the project
     cmds:
       - rm -rf build
+      - rm -rf .cache && mkdir -p .cache
 
   clean-hard:
     desc: Clean the project hard
@@ -43,6 +50,7 @@ tasks:
     cmds:
       - task: check
       - pnpm --silent run build
+      - cd build;zip build.zip *.js *.js.map
 
   type-check:
     desc: Type check the project
@@ -56,3 +64,45 @@ tasks:
     cmds:
       - task: install
       - task: type-check
+
+  generate-build-tag:
+    desc: Generate a build tag
+    silent: true
+    internal: true
+    run: once
+    cmds:
+      - mkdir -p .cache
+      - echo $(date +%Y%m%d%H%M%S) > .cache/build_tag
+      - "echo \"Build tag: $(cat .cache/build_tag)\""
+
+  deploy:
+    desc: Deploy the project
+    cmds:
+      - task: clean
+      - task: build
+      - task: generate-build-tag
+      - aws s3 cp ./build/build.zip s3://{{ .LAMBDA_BUCKET }}/build/lambda-{{ .BUILD_TAG }}.zip
+      - task: tf:apply
+
+  tf:plan:
+    desc: Terraform plan
+    aliases: [plan, p]
+    preconditions:
+      - test -f .cache/build_tag
+    cmds:
+      - task: tf:lint
+      - cd infra;TF_VAR_build_tag=$(cat ../.cache/build_tag) TF_VAR_env_vars="{}" tofu plan
+
+  tf:apply:  
+    desc: Terraform plan
+    aliases: [apply, a]
+    preconditions:
+      - test -f .cache/build_tag
+    cmds:
+      - task: tf:lint
+      - cd infra;TF_VAR_build_tag=$(cat ../.cache/build_tag) TF_VAR_env_vars="{}" tofu apply
+
+  tf:lint:
+    run: once
+    cmds:
+      - cd infra;tflint --disable-rule=terraform_required_version --recursive -f compact

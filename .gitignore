@@ -1,6 +1,12 @@
+.cache/
 .task/
 node_modules/
 build/
+.terraform/
+*.lock.hcl
+*.tfstate
+*.tfstate.backup
 
 !Taskfile.yaml
 TODO.md
+.env
