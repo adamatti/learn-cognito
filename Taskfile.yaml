@@ -59,11 +59,18 @@ tasks:
       - task: install
       - pnpm --silent run type-check
 
+  lint:
+    desc: Lint the project
+    cmds:
+      - task: install
+      - pnpm --silent run lint
+
   check:
     desc: Check the project
     cmds:
       - task: install
       - task: type-check
+      - task: lint
 
   generate-build-tag:
     desc: Generate a build tag
