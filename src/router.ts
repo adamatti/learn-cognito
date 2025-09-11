@@ -21,11 +21,45 @@ const clientPromise = (async function initializeClient() {
   });
 })();
 
+const loginHandler = ({
+  provider = "Cognito",
+}: {
+  provider: "Google" | "Cognito";
+}) => {
+  return async (req: Request, res: Response) => {
+    const nonce = generators.nonce();
+    const state = generators.state();
+    const codeVerifier = generators.codeVerifier();
+    const codeChallenge = generators.codeChallenge(codeVerifier);
+
+    req.session.nonce = nonce;
+    req.session.state = state;
+    req.session.codeVerifier = codeVerifier;
+
+    const client = await clientPromise;
+    const authUrl = client.authorizationUrl({
+      scope: "email openid profile",
+      state,
+      nonce,
+      code_challenge: codeChallenge,
+      code_challenge_method: "S256",
+      ...(provider === "Google"
+        ? {
+            identity_provider: "Google",
+          }
+        : {}),
+    });
+
+    logger.info("Redirecting (login)", { url: authUrl });
+
+    res.redirect(authUrl);
+  };
+};
+
 const debugHandler = (req: Request, res: Response) => {
   res
     .json({
       session: req.session,
-      userInfo: (req.session as any)?.userInfo,
       request: {
         method: req.method,
         path: req.path,
@@ -84,29 +118,8 @@ router.get("/logout", (req, res) => {
 /**
  * Login route. Just builds the auth URL and redirects to cognito.
  */
-router.all("/login", async (req: Request, res: Response) => {
-  const nonce = generators.nonce();
-  const state = generators.state();
-  const codeVerifier = generators.codeVerifier();
-  const codeChallenge = generators.codeChallenge(codeVerifier);
-
-  req.session.nonce = nonce;
-  req.session.state = state;
-  req.session.codeVerifier = codeVerifier;
-
-  const client = await clientPromise;
-  const authUrl = client.authorizationUrl({
-    scope: "email openid profile",
-    state,
-    nonce,
-    code_challenge: codeChallenge,
-    code_challenge_method: "S256",
-  });
-
-  logger.info("Redirecting (login)", { url: authUrl });
-
-  res.redirect(authUrl);
-});
+router.all("/login", loginHandler({ provider: "Cognito" }));
+router.all("/login/google", loginHandler({ provider: "Google" }));
 
 /**
  * This is to simulate a backend call in a different system, receiving only the token

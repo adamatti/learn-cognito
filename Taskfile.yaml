@@ -113,6 +113,19 @@ tasks:
         TF_VAR_env_vars="{}"
         tofu apply -input=false -auto-approve
 
+  tf:output:  
+    desc: Terraform output
+    aliases: [output, out, o]
+    preconditions:
+      - test -f .cache/build_tag
+    cmds:
+      - task: tf:lint
+      - >-
+        cd infra;
+        TF_VAR_build_tag=$(cat ../.cache/build_tag)
+        TF_VAR_env_vars="{}"
+        tofu output
+
   tf:lint:
     run: once
     cmds:
