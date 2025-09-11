@@ -4,7 +4,11 @@
   "linter": {
     "rules": {
       "suspicious": {
-        "noConsole": "off"
+        "noConsole": "off",
+        "noExplicitAny": "off"
+      },
+      "style": {
+        "noNonNullAssertion": "off"
       }
     }
   }

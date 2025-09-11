@@ -28,8 +28,14 @@ resource aws_cognito_user_pool_client this {
     allowed_oauth_scopes                 = ["email", "openid", "profile"]
     allowed_oauth_flows_user_pool_client = true
     explicit_auth_flows                  = ["ALLOW_REFRESH_TOKEN_AUTH", "ALLOW_USER_PASSWORD_AUTH", "ALLOW_USER_SRP_AUTH"]
-    callback_urls                        = ["http://localhost:3000/api/auth/callback/cognito"]
-    logout_urls                          = ["http://localhost:3000"]
+    callback_urls                        = [
+        // "http://localhost:3000/api/auth/callback/cognito",
+        "${aws_apigatewayv2_stage.lambda.invoke_url}/debug"
+    ]
+    logout_urls                          = [
+        // "http://localhost:3000",
+        aws_apigatewayv2_stage.lambda.invoke_url
+    ]
     supported_identity_providers         = ["COGNITO"]
     depends_on                           = [aws_cognito_user_pool.this]
     generate_secret                      = false

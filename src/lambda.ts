@@ -1,8 +1,11 @@
 import type { APIGatewayProxyEvent, Context, SQSEvent } from "aws-lambda";
 import cors from "cors";
 import express from "express";
+import session from "express-session";
 import serverless from "serverless-http";
+import logger from "./logger";
 import router from "./router";
+import config from "./config";
 
 type LambdaRequest = SQSEvent | APIGatewayProxyEvent;
 
@@ -11,13 +14,20 @@ const httpServer = (() => {
   app.use(cors());
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
+  app.use(
+    session({
+      secret: config.session.secret,
+      resave: false,
+      saveUninitialized: false,
+    })
+  );
   app.use("/stage", router);
 
   return serverless(app);
 })();
 
 export const handler = (event: LambdaRequest, context: Context) => {
-  console.log("Lambda started");
+  logger.info("Lambda started");
 
   if ("httpMethod" in event) {
     return httpServer(event, context);

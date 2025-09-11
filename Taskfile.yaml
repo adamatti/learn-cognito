@@ -107,9 +107,20 @@ tasks:
       - test -f .cache/build_tag
     cmds:
       - task: tf:lint
-      - cd infra;TF_VAR_build_tag=$(cat ../.cache/build_tag) TF_VAR_env_vars="{}" tofu apply
+      - >-
+        cd infra;
+        TF_VAR_build_tag=$(cat ../.cache/build_tag)
+        TF_VAR_env_vars="{}"
+        tofu apply -input=false -auto-approve
 
   tf:lint:
     run: once
     cmds:
       - cd infra;tflint --disable-rule=terraform_required_version --recursive -f compact
+
+  aws:logs:
+    desc: Get logs from AWS
+    aliases: [logs]
+    cmds:
+      # FIXME remove hardcoded name
+      - aws logs tail --since 1h --follow /aws/lambda/learn-cognito-lambda

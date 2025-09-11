@@ -10,9 +10,12 @@ resource "aws_lambda_function" "this" {
 
     environment {
         variables = merge({
-          NODE_OPTIONS      = "--enable-source-maps --stack-trace-limit=100"
-          COGNITO_CLIENT_ID = aws_cognito_user_pool_client.this.id
-          API_GATEWAY_STAGE = aws_apigatewayv2_stage.lambda.name
+          NODE_OPTIONS        = "--enable-source-maps --stack-trace-limit=100"
+          COGNITO_CLIENT_ID   = aws_cognito_user_pool_client.this.id
+          COGNITO_POOL_ID     = aws_cognito_user_pool.this.id
+          COGNITO_DOMAIN_NAME = aws_cognito_user_pool_domain.this.domain
+          API_GATEWAY_STAGE   = aws_apigatewayv2_stage.lambda.name
+          API_URL             = aws_apigatewayv2_stage.lambda.invoke_url
           // QUEUE_URL         = aws_sqs_queue.this.url
         }, var.env_vars)
     }
