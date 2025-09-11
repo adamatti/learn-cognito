@@ -13,6 +13,7 @@ const config = {
     domainName: process.env.COGNITO_DOMAIN_NAME!,
   },
   apiUrl: process.env.API_URL!,
+  apiStage: process.env.API_GATEWAY_STAGE!,
 };
 
 logger.debug("Started with config", { config });

@@ -3,9 +3,9 @@ import cors from "cors";
 import express from "express";
 import session from "express-session";
 import serverless from "serverless-http";
+import config from "./config";
 import logger from "./logger";
 import router from "./router";
-import config from "./config";
 
 type LambdaRequest = SQSEvent | APIGatewayProxyEvent;
 
@@ -21,7 +21,7 @@ const httpServer = (() => {
       saveUninitialized: false,
     })
   );
-  app.use("/stage", router);
+  app.use(`/${config.apiStage}`, router);
 
   return serverless(app);
 })();

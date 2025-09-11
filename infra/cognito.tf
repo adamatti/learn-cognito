@@ -1,6 +1,7 @@
 resource aws_cognito_user_pool this {
     name = local.app_name
     auto_verified_attributes = ["email"]
+    username_attributes      = ["email"]
 
     admin_create_user_config {
         allow_admin_create_user_only = false
@@ -30,11 +31,13 @@ resource aws_cognito_user_pool_client this {
     explicit_auth_flows                  = ["ALLOW_REFRESH_TOKEN_AUTH", "ALLOW_USER_PASSWORD_AUTH", "ALLOW_USER_SRP_AUTH"]
     callback_urls                        = [
         // "http://localhost:3000/api/auth/callback/cognito",
-        "${aws_apigatewayv2_stage.lambda.invoke_url}/debug"
+        "${aws_apigatewayv2_stage.lambda.invoke_url}/callback",
+        // "${aws_apigatewayv2_stage.lambda.invoke_url}/debug"
     ]
     logout_urls                          = [
         // "http://localhost:3000",
-        aws_apigatewayv2_stage.lambda.invoke_url
+        aws_apigatewayv2_stage.lambda.invoke_url,
+        // "${aws_apigatewayv2_stage.lambda.invoke_url}/debug"
     ]
     supported_identity_providers         = ["COGNITO"]
     depends_on                           = [aws_cognito_user_pool.this]

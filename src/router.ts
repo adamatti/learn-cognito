@@ -11,8 +11,11 @@ const clientPromise = (async function initializeClient() {
   );
   return new issuer.Client({
     client_id: config.cognito.clientId,
-    client_secret: config.session.secret,
-    redirect_uris: [`${config.apiUrl}/debug`],
+
+    // client_secret: config.session.secret,
+    token_endpoint_auth_method: "none",
+
+    redirect_uris: [`${config.apiUrl}/callback`],
     response_types: ["code"],
   });
 })();
@@ -34,11 +37,31 @@ const debugHandler = (req: Request, res: Response) => {
     .end();
 };
 
-router.get("/", (_req: Request, res: Response) => {
-  res.send("Hello World");
+router.get("/", (req: Request, res: Response) => {
+  res.json({
+    message: "Hello World",
+    isAuthenticated: !!(req.session as any).userInfo,
+  });
 });
 
 router.all("/debug", debugHandler);
+
+router.get("/callback", async (req: Request, res: Response) => {
+  logger.debug("Callback called");
+  const client = await clientPromise;
+  const params = client.callbackParams(req);
+  const tokenSet = await client.callback(`${config.apiUrl}/callback`, params, {
+    nonce: req.session.nonce,
+    state: req.session.state,
+    code_verifier: req.session.codeVerifier,
+  });
+  logger.debug("Token set", { tokenSet });
+
+  const userInfo = await client.userinfo(tokenSet.access_token!);
+  req.session.userInfo = userInfo;
+
+  res.redirect(`/${config.apiStage}`);
+});
 
 router.get("/logout", (req, res) => {
   logger.debug("Logging called");
@@ -51,16 +74,20 @@ router.get("/logout", (req, res) => {
 router.all("/login", async (req: Request, res: Response) => {
   const nonce = generators.nonce();
   const state = generators.state();
+  const codeVerifier = generators.codeVerifier();
+  const codeChallenge = generators.codeChallenge(codeVerifier);
 
-  const session = req.session as any;
-  session.nonce = nonce;
-  session.state = state;
+  req.session.nonce = nonce;
+  req.session.state = state;
+  req.session.codeVerifier = codeVerifier;
 
   const client = await clientPromise;
   const authUrl = client.authorizationUrl({
     scope: "email openid profile",
     state,
     nonce,
+    code_challenge: codeChallenge,
+    code_challenge_method: "S256",
   });
 
   logger.info("Redirecting (login)", { url: authUrl });
