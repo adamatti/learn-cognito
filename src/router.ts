@@ -1,4 +1,5 @@
 import { type Request, type Response, Router } from "express";
+import { StatusCodes } from "http-status-codes";
 import { generators, Issuer } from "openid-client";
 import config from "./config";
 import logger from "./logger";
@@ -44,8 +45,14 @@ router.get("/", (req: Request, res: Response) => {
   });
 });
 
+/**
+ * Debug route. Used for testing the session and the token.
+ */
 router.all("/debug", debugHandler);
 
+/**
+ * Serves as the callback URL for cognito. It sets the token and user info in the session.
+ */
 router.get("/callback", async (req: Request, res: Response) => {
   logger.debug("Callback called");
   const client = await clientPromise;
@@ -63,14 +70,20 @@ router.get("/callback", async (req: Request, res: Response) => {
   res.redirect(`/${config.apiStage}`);
 });
 
+/**
+ * Destroy sessions (local and on cognito)
+ */
 router.get("/logout", (req, res) => {
   logger.debug("Logging called");
-  (req.session as any).destroy();
+  req.session.destroy();
   const logoutUrl = `https://${config.cognito.domainName}.auth.${config.aws.region}.amazoncognito.com/logout?client_id=${config.cognito.clientId}&logout_uri=${config.apiUrl}`;
   logger.debug("Redirecting (logout)", { url: logoutUrl });
   res.redirect(logoutUrl);
 });
 
+/**
+ * Login route. Just builds the auth URL and redirects to cognito.
+ */
 router.all("/login", async (req: Request, res: Response) => {
   const nonce = generators.nonce();
   const state = generators.state();
@@ -93,6 +106,25 @@ router.all("/login", async (req: Request, res: Response) => {
   logger.info("Redirecting (login)", { url: authUrl });
 
   res.redirect(authUrl);
+});
+
+/**
+ * This is to simulate a backend call in a different system, receiving only the token
+ */
+router.get("/protected", async (req: Request, res: Response) => {
+  const client = await clientPromise;
+  if (!req.headers.authorization) {
+    return res
+      .status(StatusCodes.UNAUTHORIZED)
+      .json({ message: "Unauthorized" });
+  }
+  const token: string = req.headers.authorization?.split(" ")[1];
+
+  const userInfo = await client.userinfo(token);
+
+  return res.json({
+    userInfo,
+  });
 });
 
 export default router;

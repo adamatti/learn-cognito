@@ -7,5 +7,6 @@ declare module "express-session" {
     state?: string;
     codeVerifier?: string;
     userInfo?: UserinfoResponse;
+    destroy?: () => void;
   }
 }
