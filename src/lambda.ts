@@ -33,6 +33,8 @@ export const handler = (event: LambdaRequest, context: Context) => {
     return httpServer(event, context);
   }
 
+  logger.debug("Event not handled", { event });
+
   return {
     status: "ok",
     event,

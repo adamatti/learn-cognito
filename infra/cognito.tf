@@ -15,6 +15,17 @@ resource aws_cognito_user_pool this {
         require_symbols                  = true
         temporary_password_validity_days = 14
     }
+
+/*
+    lambda_config {
+        custom_email_sender {
+            lambda_arn     = 
+            lambda_version = 
+        }
+
+        pre_sign_up = 
+    }
+*/
 }
 
  resource aws_cognito_user_pool_domain this {
