@@ -13,10 +13,12 @@ resource "aws_iam_role" "lambda" {
       },
     ]
   })
+}
 
-  inline_policy {
-    name = "LogPermission"
-    policy = jsonencode({
+resource "aws_iam_role_policy" "log" {
+  name = "LogPermission"
+  role = aws_iam_role.lambda.id
+  policy = jsonencode({
       Version = "2012-10-17"
       Statement = [
         {
@@ -32,13 +34,14 @@ resource "aws_iam_role" "lambda" {
         }
       ]
     })
-  }
+}
 
-  inline_policy {
-    name = "S3ReadPermission"
-    policy = jsonencode({
-      Version = "2012-10-17"
-      Statement = [
+resource "aws_iam_role_policy" "s3" {
+  name = "S3ReadPermission"
+  role = aws_iam_role.lambda.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
         {
           Action = [
             "s3:Get*",
@@ -54,41 +57,23 @@ resource "aws_iam_role" "lambda" {
           ]
         },
       ]
-    })
-  }
+  })
+}
 
-  inline_policy {
-    name = "S3WritePermission"
-    policy = jsonencode({
-      Version = "2012-10-17"
-      Statement = [
-        {
-          Action = [
-            "s3:PutObject",
-          ]
-          Effect = "Allow"
-          Resource = [
-            "${data.aws_s3_bucket.bucket.arn}/backend/*"
-          ]
-        },
-      ]
-    })
-  }
-
-  inline_policy {
-    name = "CognitoPermission"
-
-    policy = jsonencode({
-      Version = "2012-10-17"
-      Statement = [
-        {
-            Action = [
-                "cognito-idp:AdminGetUser"
-            ]
-            Effect = "Allow"
-            Resource = "*"
-        }
-      ]
-    })
-  }
+resource "aws_iam_role_policy" "cognito" {
+  name = "CognitoPermission"
+  role = aws_iam_role.lambda.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "cognito-idp:AdminGetUser"
+  
+        ]
+        Effect = "Allow"
+        Resource = "*"
+      }
+    ]
+  })
 }
