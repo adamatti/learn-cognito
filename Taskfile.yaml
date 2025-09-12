@@ -65,6 +65,12 @@ tasks:
       - task: install
       - pnpm --silent run lint
 
+  lint:fix:
+    desc: Lint the project and fix issues
+    cmds:
+      - task: install
+      - pnpm --silent run lint --unsafe
+
   check:
     desc: Check the project
     cmds:
@@ -98,7 +104,11 @@ tasks:
       - test -f .cache/build_tag
     cmds:
       - task: tf:lint
-      - cd infra;TF_VAR_build_tag=$(cat ../.cache/build_tag) TF_VAR_env_vars="{}" tofu plan
+      - >-
+        cd infra;
+        TF_VAR_build_tag=$(cat ../.cache/build_tag)
+        TF_VAR_env_vars="{}"
+        tofu plan
 
   tf:apply:  
     desc: Terraform plan
