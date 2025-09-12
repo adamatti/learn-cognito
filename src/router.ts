@@ -88,7 +88,6 @@ router.all("/debug", debugHandler);
  * Serves as the callback URL for cognito. It sets the token and user info in the session.
  */
 router.get("/callback", async (req: Request, res: Response) => {
-  logger.debug("Callback called");
   const client = await clientPromise;
   const params = client.callbackParams(req);
   const tokenSet = await client.callback(`${config.apiUrl}/callback`, params, {
@@ -108,7 +107,6 @@ router.get("/callback", async (req: Request, res: Response) => {
  * Destroy sessions (local and on cognito)
  */
 router.get("/logout", (req, res) => {
-  logger.debug("Logging called");
   req.session.destroy();
   const logoutUrl = `https://${config.cognito.domainName}.auth.${config.aws.region}.amazoncognito.com/logout?client_id=${config.cognito.clientId}&logout_uri=${config.apiUrl}`;
   logger.debug("Redirecting (logout)", { url: logoutUrl });

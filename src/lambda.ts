@@ -1,13 +1,29 @@
-import type { APIGatewayProxyEvent, Context, SQSEvent } from "aws-lambda";
+import type {
+  APIGatewayProxyEvent,
+  Context,
+  PostAuthenticationTriggerEvent,
+  PostConfirmationTriggerEvent,
+  PreAuthenticationTriggerEvent,
+  PreSignUpTriggerEvent,
+  PreTokenGenerationTriggerEvent,
+  SQSEvent,
+} from "aws-lambda";
 import cors from "cors";
 import express from "express";
 import session from "express-session";
 import serverless from "serverless-http";
 import config from "./config";
 import logger from "./logger";
+import { loggerMiddleware } from "./middlewares";
 import router from "./router";
 
-type LambdaRequest = SQSEvent | APIGatewayProxyEvent;
+type CognitoEvent =
+  | PreSignUpTriggerEvent
+  | PostAuthenticationTriggerEvent
+  | PostConfirmationTriggerEvent
+  | PreAuthenticationTriggerEvent
+  | PreTokenGenerationTriggerEvent;
+type LambdaRequest = SQSEvent | APIGatewayProxyEvent | CognitoEvent;
 
 const httpServer = (() => {
   const app = express();
@@ -21,23 +37,30 @@ const httpServer = (() => {
       saveUninitialized: false,
     })
   );
+  app.use(loggerMiddleware);
   app.use(`/${config.apiStage}`, router);
 
   return serverless(app);
 })();
 
 export const handler = (event: LambdaRequest, context: Context) => {
-  logger.info("Lambda started");
+  try {
+    logger.info("Lambda started");
 
-  if ("httpMethod" in event) {
-    return httpServer(event, context);
+    if ("httpMethod" in event) {
+      return httpServer(event, context);
+    }
+
+    logger.debug("Event not handled", { event });
+
+    return event;
+  } catch (error) {
+    logger.error("Lambda error", {
+      event,
+      error,
+      errorMessage: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    throw error;
   }
-
-  logger.debug("Event not handled", { event });
-
-  return {
-    status: "ok",
-    event,
-    context,
-  };
 };

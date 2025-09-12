@@ -7,6 +7,9 @@
         "noConsole": "off",
         "noExplicitAny": "off"
       },
+      "correctness": {
+        "noUnusedFunctionParameters": "off"
+      },
       "style": {
         "noNonNullAssertion": "off"
       }
