@@ -1,7 +1,7 @@
 import winston from "winston";
 
 const format = winston.format.combine(
-  winston.format.timestamp(),
+  // winston.format.timestamp(),
   winston.format.json(),
   // winston.format.prettyPrint(), // FIXME local only
   // winston.format.colorize(),
