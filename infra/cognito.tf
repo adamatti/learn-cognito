@@ -1,3 +1,10 @@
+
+// workarround to avoid circular dependency
+/*
+data "aws_lambda_function" "lambda" {
+    function_name = "${local.app_name}-lambda"
+} */
+
 resource aws_cognito_user_pool this {
     name = local.app_name
     auto_verified_attributes = ["email"]
@@ -16,16 +23,18 @@ resource aws_cognito_user_pool this {
         temporary_password_validity_days = 14
     }
 
-/*
-    lambda_config {
-        custom_email_sender {
-            lambda_arn     = 
-            lambda_version = 
-        }
+    // lambda_config {
+        //custom_email_sender {
+        //    lambda_arn     = data.aws_lambda_function.lambda.arn
+        //    lambda_version = data.aws_lambda_function.lambda.version
+        //}
 
-        pre_sign_up = 
-    }
-*/
+        // pre_sign_up = data.aws_lambda_function.lambda.arn
+        // post_authentication = data.aws_lambda_function.lambda.arn
+        // post_confirmation = data.aws_lambda_function.lambda.arn
+        // pre_authentication = data.aws_lambda_function.lambda.arn
+        // pre_token_generation = data.aws_lambda_function.lambda.arn
+    // }
 }
 
  resource aws_cognito_user_pool_domain this {

@@ -68,8 +68,7 @@ resource "aws_iam_role_policy" "cognito" {
     Statement = [
       {
         Action = [
-          "cognito-idp:AdminGetUser"
-  
+          "cognito-idp:*"
         ]
         Effect = "Allow"
         Resource = "*"
