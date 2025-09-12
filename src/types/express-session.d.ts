@@ -8,5 +8,7 @@ declare module "express-session" {
     codeVerifier?: string;
     userInfo?: UserinfoResponse;
     destroy?: () => void;
+    magicEmail?: string;
+    cognitoSession?: string;
   }
 }

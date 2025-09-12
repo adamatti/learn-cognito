@@ -12,6 +12,8 @@ import cors from "cors";
 import express from "express";
 import session from "express-session";
 import serverless from "serverless-http";
+import challengeHandler, { isChallengeEvent } from "./challenge/handler";
+import challengeRouter from "./challenge/router";
 import config from "./config";
 import logger from "./logger";
 import { loggerMiddleware } from "./middlewares";
@@ -39,16 +41,20 @@ const httpServer = (() => {
   );
   app.use(loggerMiddleware);
   app.use(`/${config.apiStage}`, router);
+  app.use(`/${config.apiStage}`, challengeRouter);
 
   return serverless(app);
 })();
 
-export const handler = (event: LambdaRequest, context: Context) => {
+export const handler = async (event: LambdaRequest, context: Context) => {
   try {
     logger.info("Lambda started");
 
     if ("httpMethod" in event) {
-      return httpServer(event, context);
+      return await httpServer(event, context);
+    }
+    if (isChallengeEvent(event)) {
+      return await challengeHandler(event, context);
     }
 
     logger.debug("Event not handled", { event });

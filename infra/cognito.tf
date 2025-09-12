@@ -1,9 +1,8 @@
 
 // workarround to avoid circular dependency
-/*
 data "aws_lambda_function" "lambda" {
     function_name = "${local.app_name}-lambda"
-} */
+}
 
 resource aws_cognito_user_pool this {
     name = local.app_name
@@ -23,22 +22,15 @@ resource aws_cognito_user_pool this {
         temporary_password_validity_days = 14
     }
 
-    // lambda_config {
-        //custom_email_sender {
-        //    lambda_arn     = data.aws_lambda_function.lambda.arn
-        //    lambda_version = data.aws_lambda_function.lambda.version
-        //}
-
-        // pre_sign_up = data.aws_lambda_function.lambda.arn
-        // post_authentication = data.aws_lambda_function.lambda.arn
-        // post_confirmation = data.aws_lambda_function.lambda.arn
-        // pre_authentication = data.aws_lambda_function.lambda.arn
-        // pre_token_generation = data.aws_lambda_function.lambda.arn
-    // }
+    lambda_config {
+        define_auth_challenge          = data.aws_lambda_function.lambda.arn
+        create_auth_challenge          = data.aws_lambda_function.lambda.arn
+        verify_auth_challenge_response = data.aws_lambda_function.lambda.arn
+    }
 }
 
  resource aws_cognito_user_pool_domain this {
-  domain       = "learn-adamatti" // local.app_name // cognito is not allowed here
+  domain       = "learn-adamatti" // local.app_name // "cognito" is not allowed here
   user_pool_id = aws_cognito_user_pool.this.id
 }
 
@@ -48,7 +40,12 @@ resource aws_cognito_user_pool_client this {
     allowed_oauth_flows                  = ["code"]
     allowed_oauth_scopes                 = ["email", "openid", "profile"]
     allowed_oauth_flows_user_pool_client = true
-    explicit_auth_flows                  = ["ALLOW_REFRESH_TOKEN_AUTH", "ALLOW_USER_PASSWORD_AUTH", "ALLOW_USER_SRP_AUTH"]
+    explicit_auth_flows                  = [
+        "ALLOW_REFRESH_TOKEN_AUTH",
+        "ALLOW_USER_PASSWORD_AUTH",
+        "ALLOW_USER_SRP_AUTH",
+        "ALLOW_CUSTOM_AUTH",
+    ]
     callback_urls                        = [
         // "http://localhost:3000/api/auth/callback/cognito",
         "${aws_apigatewayv2_stage.lambda.invoke_url}/callback",
