@@ -61,6 +61,7 @@ tasks:
 
   lint:
     desc: Lint the project
+    ignore_error: true
     cmds:
       - task: install
       - pnpm --silent run lint
@@ -147,3 +148,9 @@ tasks:
     cmds:
       # FIXME remove hardcoded name
       - aws logs tail --since 1h --follow /aws/lambda/learn-cognito-lambda
+
+  scripts:client:
+    desc: Run a script file
+    dotenv: [".env.client"]
+    cmds:
+      - pnpm dlx esno scripts/confirm-sign-up.ts

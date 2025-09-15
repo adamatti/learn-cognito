@@ -11,3 +11,4 @@ build/
 !Taskfile.yaml
 TODO.md
 .env
+.env.client
